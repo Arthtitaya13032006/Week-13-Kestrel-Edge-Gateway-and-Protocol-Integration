@@ -45,6 +45,7 @@ dotnet add package MQTTnet.AspNetCore --version 4.3.7.1207
 เปิดไฟล์ `Program.cs` และแทนที่ด้วยโค้ดต่อไปนี้:
 
 ```csharp
+using MQTTnet;
 using MQTTnet.AspNetCore;
 using MQTTnet.Server;
 
@@ -74,6 +75,17 @@ var app = builder.Build();
 // 3. ผูก Event Handlers สำหรับจัดการข้อความใน Broker
 app.UseMqttServer(server =>
 {
+    // ตรวจสอบการเชื่อมต่อ: กรณี Client ไม่ได้ระบุ ClientId (เช่น mosquitto CLI ที่ไม่ได้ใส่ -i)
+    // ให้ Broker สุ่ม ClientId ให้โดยอัตโนมัติ เพื่อป้องกัน Connection Refused: identifier rejected
+    server.ValidatingConnectionAsync += args =>
+    {
+        if (string.IsNullOrEmpty(args.ClientId))
+        {
+            args.AssignedClientIdentifier = Guid.NewGuid().ToString("N");
+        }
+        return Task.CompletedTask;
+    };
+
     // เมื่อมี Client เชื่อมต่อเข้ามา
     server.ClientConnectedAsync += args =>
     {
@@ -124,16 +136,18 @@ dotnet run
 *สังเกตข้อความบนคอนโซลว่าเซิร์ฟเวอร์กำลังฟังที่พอร์ต 5000 (HTTP) และ 1883 (MQTT)*
 
 #### 2. เปิดหน้าต่าง PowerShell ที่สอง: ทดสอบ Subscribe หัวข้อ
-ใช้คำสั่ง `mosquitto_sub` เพื่อดักฟังข้อความจาก Embedded Broker ของเรา:
+ใช้คำสั่ง `mosquitto_sub` เพื่อดักฟังข้อความจาก Embedded Broker ของเรา (ระบุพารามิเตอร์ `-i` เพื่อกำหนด Client ID):
 ```powershell
-mosquitto_sub -h 127.0.0.1 -p 1883 -t "test/edge/topic" -v
+mosquitto_sub -h 127.0.0.1 -p 1883 -t "test/edge/topic" -i "sub_client" -v
 ```
+> **ข้อสังเกต:** มาตรฐาน MQTT กำหนดให้ Client ต้องมี Client ID เสมอ สำหรับเครื่องมือ `mosquitto_sub` บน Windows หากไม่ระบุออปชัน `-i` มันจะส่ง Client ID ว่างเปล่ามา ซึ่งในโค้ดฝั่ง Broker เราได้ตั้งค่า `ValidatingConnectionAsync` ให้สุ่ม Client ID ให้โดยอัตโนมัติแล้ว
+
 *สังเกตหน้าต่างคอนโซลของ Kestrel จะขึ้นข้อความสีเขียวว่ามี Client เชื่อมต่อเข้ามา!*
 
 #### 3. เปิดหน้าต่าง PowerShell ที่สาม: ทดสอบ Publish ข้อความ
 ส่งข้อความผ่าน `mosquitto_pub`:
 ```powershell
-mosquitto_pub -h 127.0.0.1 -p 1883 -t "test/edge/topic" -m "Hello from CLI via Kestrel Embedded MQTT!"
+mosquitto_pub -h 127.0.0.1 -p 1883 -t "test/edge/topic" -m "Hello from CLI via Kestrel Embedded MQTT!" -i "pub_client"
 ```
 
 #### 4. สังเกตผลลัพธ์

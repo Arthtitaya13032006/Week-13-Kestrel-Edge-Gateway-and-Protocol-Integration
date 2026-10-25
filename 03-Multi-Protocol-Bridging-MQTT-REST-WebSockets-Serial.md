@@ -28,6 +28,7 @@ dotnet add package MQTTnet.AspNetCore
 
 ### การตั้งค่า Embedded Broker ในไฟล์ `Program.cs`:
 ```csharp
+using MQTTnet;
 using MQTTnet.AspNetCore;
 using MQTTnet.Server;
 

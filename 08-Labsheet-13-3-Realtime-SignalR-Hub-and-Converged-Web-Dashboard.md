@@ -70,12 +70,15 @@ public class ProtocolMetrics
 
 ### กิจกรรมที่ 13-3.2: ปรับปรุง Worker ให้ผลักข้อมูลเข้าสู่ Hub
 
-ในไฟล์ `Services.cs` ปรับปรุงคลาส `SerialBridgeWorker` ให้รับ `IHubContext<GatewayHub>` ผ่าน Dependency Injection:
+ในไฟล์ `Services.cs` ให้เพิ่ม `using Microsoft.AspNetCore.SignalR;` ที่ด้านบนสุดของไฟล์ และปรับปรุงคลาส `SerialBridgeWorker` ให้รับ `IHubContext<GatewayHub>` ผ่าน Dependency Injection:
 
 ```csharp
-// เพิ่ม parameter ใน Constructor ของ SerialBridgeWorker
+using Microsoft.AspNetCore.SignalR; // เพิ่มด้านบนสุดของ Services.cs
+
+// ... ภายในคลาส SerialBridgeWorker ...
 private readonly IHubContext<GatewayHub> _hubContext;
 private readonly ProtocolMetrics _metrics;
+
 
 public SerialBridgeWorker(
     GatewayStateStore store, 

@@ -223,25 +223,81 @@ app.Run();
 
 ### กิจกรรมที่ 13-2.4: โค้ดฝั่ง ESP32 สำหรับสื่อสารสองทางผ่าน Serial (`main.c`)
 
-สำหรับฝั่งไมโครคอนโทรลเลอร์ ให้เพิ่มตรรกะในลูปหลักเพื่อพิมพ์ค่า JSON ออกทาง `printf` และรออ่านคำสั่งควบคุม:
+สำหรับฝั่งไมโครคอนโทรลเลอร์ ให้เขียนโค้ดในโปรเจกต์ ESP-IDF เพื่ออ่านค่าแอนะล็อกและสตรีม JSON ออกทาง Serial รวมถึงอ่านคำสั่งควบคุมหลอดไฟจาก C# Gateway:
 
 ```c
-// ลูปส่งข้อมูล Serial Telemetry ใน ESP-IDF
-while (1) {
-    int raw = 0;
-    adc_oneshot_read(adc1_handle, ADC_CHANNEL_0, &raw);
-    float voltage = (raw / 4095.0f) * 3.3f;
+#include <stdio.h>
+#include <string.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/gpio.h"
+#include "driver/uart.h"
+#include "esp_log.h"
+#include "esp_adc/adc_oneshot.h"
 
-    // พิมพ์ JSON สตรีมมิ่งออก Serial
-    printf("{\"voltage\":%.2f,\"raw\":%d}\n", voltage, raw);
+#define LED_PIN             GPIO_NUM_2       // Onboard LED บน ESP32
+#define POT_ADC_CHANNEL     ADC_CHANNEL_6    // GPIO 34 (ADC1 Channel 6)
 
-    vTaskDelay(pdMS_TO_TICKS(500));
+void app_main(void)
+{
+    // 1. ตั้งค่า GPIO สำหรับไฟ LED
+    gpio_reset_pin(LED_PIN);
+    gpio_set_direction(LED_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(LED_PIN, 0);
+
+    // 2. ตั้งค่า ADC Unit 1
+    adc_oneshot_unit_handle_t adc1_handle;
+    adc_oneshot_unit_init_cfg_t init_config = {
+        .unit_id = ADC_UNIT_1,
+        .ulp_mode = ADC_ULP_MODE_DISABLE,
+    };
+    ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config, &adc1_handle));
+
+    // 3. กำหนดความละเอียด 12-bit (0-4095) และ Attenuation 12dB (0 - 3.3V)
+    adc_oneshot_chan_cfg_t chan_config = {
+        .bitwidth = ADC_BITWIDTH_12,
+        .atten = ADC_ATTEN_DB_12,
+    };
+    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, POT_ADC_CHANNEL, &chan_config));
+
+    // 4. ติดตั้ง UART Driver บนพอร์ตเริ่มต้น เพื่อให้อ่านคำสั่งผ่าน Serial แบบ Non-blocking ได้
+    uart_driver_install(UART_NUM_0, 256, 0, 0, NULL, 0);
+
+    uint8_t rx_buf[64];
+
+    while (1) {
+        // --- ส่วนที่ 1: อ่านค่า ADC และส่งออก JSON ทาง Serial ---
+        int raw = 0;
+        ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, POT_ADC_CHANNEL, &raw));
+        float voltage = (raw / 4095.0f) * 3.3f;
+
+        // พิมพ์ JSON สตรีมมิ่งออก Serial
+        printf("{\"voltage\":%.2f,\"raw\":%d}\n", voltage, raw);
+
+        // --- ส่วนที่ 2: ตรวจจับคำสั่งจาก C# Kestrel (LED:ON / LED:OFF) ---
+        int len = uart_read_bytes(UART_NUM_0, rx_buf, sizeof(rx_buf) - 1, pdMS_TO_TICKS(50));
+        if (len > 0) {
+            rx_buf[len] = '\0';
+            if (strstr((char *)rx_buf, "LED:ON") != NULL) {
+                gpio_set_level(LED_PIN, 1);
+            } else if (strstr((char *)rx_buf, "LED:OFF") != NULL) {
+                gpio_set_level(LED_PIN, 0);
+            }
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(450));
+    }
 }
 ```
+
 
 ---
 
 ### กิจกรรมที่ 13-2.5: การทดสอบสะพานเชื่อมต่อ
+
+> [!WARNING] **ข้อพึงระวังเรื่องพอร์ตสื่อสารอนุกรม (Serial Port Exclusive Lock):**
+> 1. ตรวจสอบหมายเลข COM Port ของบอร์ด ESP32 ผ่าน Device Manager แล้วแก้ไขตัวแปร `_portName` ในไฟล์ `Services.cs` ให้ตรงกับเครื่องของคุณ (เช่น `COM24`)
+> 2. **ต้องปิด `idf monitor`, PuTTY หรือ Serial Monitor อื่นๆ ก่อนรัน Kestrel เสมอ** เพราะบน Windows พอร์ต COM จะถูกล็อกใช้งานแบบ Exclusive Access (เปิดได้เพียง 1 โปรแกรมในเวลาเดียวกัน) หากมีโปรแกรมอื่นเปิดพอร์ตค้างไว้ C# จะเปิดพอร์ตไม่สำเร็จและส่งคำสั่งไม่ได้ (`sentToSerial: false`)
 
 1. เสียบบอร์ด ESP32 เข้ากับเครื่อง และสั่งรัน Kestrel:
 ```powershell
@@ -254,7 +310,7 @@ curl http://localhost:5000/api/telemetry/latest
 *สังเกตว่าจะได้ข้อมูล JSON ของแรงดันไฟฟ้าทันที!*
 3. เปิด `mosquitto_sub`:
 ```powershell
-mosquitto_sub -h 127.0.0.1 -p 1883 -t "iot/esp32/telemetry" -v
+mosquitto_sub -h 127.0.0.1 -p 1883 -t "iot/esp32/telemetry" -i "sub_client" -v
 ```
 *สังเกตว่าข้อมูลที่อ่านจากสาย USB Serial ถูกส่งต่อเข้าหัวข้อ MQTT อัตโนมัติ!*
 4. ทดสอบสั่งเปิด-ปิดไฟผ่าน REST API:
