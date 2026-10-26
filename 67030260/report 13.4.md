@@ -38,6 +38,8 @@
    * สั่งรันแอปบนมือถือจริง หรือรันบนเครื่องคอมพิวเตอร์ผ่าน `flutter run`
 
 ![alt text](Images1/image-11.png)
+![alt text](Images1/image-14.png)
+![alt text](Images1/image-15.png)
 
 ---
 
