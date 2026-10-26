@@ -73,15 +73,13 @@
 * **การทดสอบ:** แตะสวิตช์เปิดไฟ (Toggle Switch) บนหน้าจอแอป Flutter
 * **ผลลัพธ์:** แอป Flutter ส่ง MQTT Publish ไปยัง Topic `iot/esp32/control` ข้อความ `{"state": "ON"}` โบรกเกอร์ภายใน Kestrel ดักจับแพ็กเก็ตแล้วแปลงเป็นคำสั่ง Serial `LED:ON` ส่งต่อไปยังบอร์ด ESP32 ทำให้หลอดไฟ LED จริงสีเหลืองติดสว่างขึ้น พร้อมกันนั้น Kestrel ได้แจ้งเตือน SignalR Clients ทุกเครื่อง ทำให้ปุ่มบนหน้าเว็บเปลี่ยนสถานะเป็น "ON" สีเขียวอัตโนมัติ
 
-![Mobile Actuation Demo](Images1/lab13-4_mobile_actuation.gif)
-
-*ภาพเคลื่อนไหวแสดงการแตะสวิตช์สั่งเปิดไฟจากแอปมือถือ Flutter*
+<p align="center"><em>ภาพเคลื่อนไหวแสดงการแตะสวิตช์สั่งเปิดไฟจากแอปมือถือ Flutter</em></p>
 
 <p align="center">
   <img src="Images1/S__78569482.jpg" width="48%" alt="ESP32 LED ON" />
 </p>
 
-*ภาพถ่ายฮาร์ดแวร์จริง: หลอดไฟ LED บนบอร์ด ESP32 ติดสว่างขึ้นตามคำสั่งจากมือถือ*
+<p align="center"><em>ภาพถ่ายฮาร์ดแวร์จริง: หลอดไฟ LED บนบอร์ด ESP32 ติดสว่างขึ้นตามคำสั่งจากมือถือ</em></p>
 
 > 🔗 **บันทึกวิดีโอผลการทดสอบ:** [วิดีโอแสดงการสั่งเปิดไฟจากแอป Flutter ข้ามมายังบอร์ดจริงและหน้าเว็บ (Google Drive)](https://drive.google.com/file/d/1TlxpOZb3h9fb2rMiqui3Wz6EjWL_deHp/view?usp=sharing)
 
@@ -95,7 +93,7 @@
   <img src="Images1/S__78569483.jpg" width="48%" alt="ESP32 LED OFF" />
 </p>
 
-*ภาพถ่ายฮาร์ดแวร์จริง: หลอดไฟ LED บนบอร์ด ESP32 ดับลงตามคำสั่งจาก Web Command Center*
+<p align="center"><em>ภาพถ่ายฮาร์ดแวร์จริง: หลอดไฟ LED บนบอร์ด ESP32 ดับลงตามคำสั่งจาก Web Command Center</em></p>
 
 > 🔗 **บันทึกวิดีโอผลการทดสอบ:** [วิดีโอแสดงการสั่งปิดไฟจาก Web Dashboard ข้ามมายังบอร์ดจริงและแอป Flutter (Google Drive)](https://drive.google.com/file/d/1kROgC7aG_2q3W4jHaV8ezbjQnUEAdNYn/view?usp=sharing)
 
@@ -122,8 +120,11 @@
 3. **สรุปผลการประเมินความอยู่รอด (Edge Resilience):**
    ระบบไอโอทีที่ออกแบบด้วยสถาปัตยกรรม **Converged Edge Gateway** มีคุณสมบัติ **High Local Survivability** และ **Zero Cloud Dependency** สามารถปฏิบัติงานแบบ Standalone ต่อเนื่องได้แม้อินเทอร์เน็ตภายนอกจะล่มทั้งหมด ซึ่งเป็นคุณสมบัติหัวใจสำคัญสำหรับระบบควบคุมอัตโนมัติในโรงงานอุตสาหกรรม (Mission-Critical Industrial IoT)
 
-![Local Survivability Test](Images1/lab13-4_survivability.gif)
-*ภาพเคลื่อนไหวแสดงการทดสอบความทนทานของระบบในสภาวะตัดการเชื่อมต่ออินเทอร์เน็ตภายนอก (Local Survivability)*
+<p align="center">
+  <img src="Images1/lab13-4_survivability.gif" width="70%" alt="Local Survivability Test" />
+</p>
+
+<p align="center"><em>ภาพเคลื่อนไหวแสดงการทดสอบความทนทานของระบบในสภาวะตัดการเชื่อมต่ออินเทอร์เน็ตภายนอก (Local Survivability)</em></p>
 
 > 🔗 **บันทึกวิดีโอผลการทดสอบ:** [วิดีโอแสดงการทดสอบระบบในสภาวะ Local Survivability (Google Drive)](https://drive.google.com/file/d/1ObheUIbZAclGHMDx4ucvyuAcyRTsry55/view?usp=sharing)
 
