@@ -73,7 +73,6 @@
 * **การทดสอบ:** แตะสวิตช์เปิดไฟ (Toggle Switch) บนหน้าจอแอป Flutter
 * **ผลลัพธ์:** แอป Flutter ส่ง MQTT Publish ไปยัง Topic `iot/esp32/control` ข้อความ `{"state": "ON"}` โบรกเกอร์ภายใน Kestrel ดักจับแพ็กเก็ตแล้วแปลงเป็นคำสั่ง Serial `LED:ON` ส่งต่อไปยังบอร์ด ESP32 ทำให้หลอดไฟ LED จริงสีเหลืองติดสว่างขึ้น พร้อมกันนั้น Kestrel ได้แจ้งเตือน SignalR Clients ทุกเครื่อง ทำให้ปุ่มบนหน้าเว็บเปลี่ยนสถานะเป็น "ON" สีเขียวอัตโนมัติ
 
-<p align="center"><em>ภาพเคลื่อนไหวแสดงการแตะสวิตช์สั่งเปิดไฟจากแอปมือถือ Flutter</em></p>
 
 <p align="center">
   <img src="Images1/S__78569482.jpg" width="48%" alt="ESP32 LED ON" />
